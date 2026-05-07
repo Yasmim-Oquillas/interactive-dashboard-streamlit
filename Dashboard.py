@@ -20,10 +20,44 @@ def formata_numero(valor, prefixo=''):
 st.title('DASHBOARD DE VENDAS :shopping_cart:')
 
 
-# Fetch dos dados de produtos via API e transformação para DataFrame
+# URL da API utilizada no dashboard
 url = 'https://labdados.com/produtos'
-response = requests.get(url)
+
+# Lista de regiões disponíveis para filtro
+regioes = ['Brasil', 'Centro-Oeste', 'Nordeste', 'Norte', 'Sudeste', 'Sul']
+
+# Cria a área lateral de filtros
+st.sidebar.title('Filtros')
+
+# Filtro de região
+regiao = st.sidebar.selectbox('Região', regioes)
+
+# Remove o filtro quando "Brasil" estiver selecionado
+if regiao == 'Brasil':
+    regiao = ''
+
+
+# Define se os dados serão exibidos para todo o período
+todos_anos = st.sidebar.checkbox('Dados de todo o período', value = True)
+# Exibe o seletor de ano apenas quando necessário
+if todos_anos:
+    ano = ''
+else:
+    ano = st.sidebar.slider('Ano', 2020, 2023)
+
+
+# Parâmetros enviados para a API
+query_string = {'regiao':regiao.lower(), 'ano':ano}
+
+# Requisição dos dados filtrados
+response = requests.get(url, params = query_string)
 dados = pd.DataFrame.from_dict(response.json())
+
+# Filtro de vendedores
+filtro_vendedores = st.sidebar.multiselect('Vendedores', dados['Vendedor'].unique())
+# Filtra os dados conforme os vendedores selecionados
+if filtro_vendedores:
+    dados = dados[dados['Vendedor'].isin(filtro_vendedores)]
 
 # Converte a coluna de data para formato datetime (necessário para análise temporal)
 dados['Data da Compra'] = pd.to_datetime(dados['Data da Compra'], format = '%d/%m/%Y')
