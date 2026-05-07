@@ -1,6 +1,18 @@
 import streamlit as st
 import requests
 import pandas as pd
+import time
+
+# Armazena em cache a conversão do DataFrame para CSV
+@st.cache_data
+def converte_csv(df):
+    return df.to_csv(index = False).encode('utf-8')
+
+# Exibe uma mensagem temporária após o download do arquivo
+def mensagem_sucesso():
+    sucesso = st.success('Arquivo baixado com sucesso!', icon = '✅')
+    time.sleep(5)
+    sucesso.empty()
 
 # Título da página
 st.title('DADOS BRUTOS')
@@ -66,3 +78,19 @@ dados_filtrados = dados_filtrados[colunas]
 st.dataframe(dados_filtrados)
 
 st.markdown(f'A tabela possui :blue[{dados_filtrados.shape[0]}] linhas e:blue[{dados_filtrados.shape[1]}] colunas')
+
+# Área para exportação dos dados filtrados em CSV
+st.markdown('Escreva um nome para o arquivo')
+
+col1, col2 = st.columns(2)
+
+with col1:
+    # Campo para definir o nome do arquivo exportado
+    nome_arquivo = st.text_input('', label_visibility = 'collapsed', value = 'dados')
+    nome_arquivo += '.csv'
+
+with col2:
+    # Botão para download da tabela filtrada em formato CSV
+    st.download_button('Fazer o download da tabela em csv', data = converte_csv(dados_filtrados), file_name = nome_arquivo, mime = 'text/csv', on_click = mensagem_sucesso)
+
+
